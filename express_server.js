@@ -6,7 +6,7 @@ function generateRandomString() {
   let result = "";
   // declare all characters
   const characters ='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  for (let i = 0; i < characters.length; i++) {
+  for (let i = 0; i < 5; i++) {
   result += characters.charAt(Math.floor(Math.random() * characters.length));
   }
   return result;
@@ -47,12 +47,20 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+app.get("/u/:shortURL", (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL];
+  res.redirect(longURL);
+});
+
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase };
   res.render("urls_show", templateVars);
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // Log the POST request body to the console
-  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  const shortURL = generateRandomString();
+  console.log(req.body.longURL);  // Log the POST request body to the console
+  urlDatabase[shortURL]  = req.body.longURL;
+  //console.log(urlDatabase);
+  res.redirect(`/urls/${shortURL}`);         // Respond with 'Ok' (we will replace this)
 });
