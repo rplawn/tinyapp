@@ -61,11 +61,15 @@ app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
   console.log(req.body.longURL);  // Log the POST request body to the console
   urlDatabase[shortURL] = req.body.longURL;
-  //console.log(urlDatabase);
   res.redirect(`/urls/${shortURL}`);         // Respond with 'Ok' (we will replace this)
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   delete urlDatabase[req.params.shortURL];
+  res.redirect(`/urls`)
+});
+
+app.post("/urls/:shortURL", (req, res) => {
+  urlDatabase[req.params.shortURL] = req.body.newURL;
   res.redirect(`/urls`)
 });
