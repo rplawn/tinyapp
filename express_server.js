@@ -88,7 +88,11 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie
+  res.clearCookie("username")
+  res.redirect(`/urls`)
+});
+
+app.post("/register", (req, res) => {
   res.redirect(`/urls`)
 });
 
