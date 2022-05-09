@@ -11,12 +11,24 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>  
     </div>
   </div>
-  <form action="login" method="post" >
-  <div class="container">
-    <input type="text" placeholder="Username" name="username" required>
-    <button type="submit">Login</button>
-</form>
-</div>
+  <!-- Add conditional here-->
+  <% if (username) { %>
+    <form action="/logout" method="POST">
+      <div>
+        <label for="username"> 
+          Logged in as <%= username %> 
+        </label>
+        <button type="submit" class="btn btn-link">Logout</button>
+      </div>
+    </form>
+  <% } else { %>  
+    <form action="/login" method="post" >
+      <div class="container">
+        <input type="text" placeholder="Username" name="username" required>
+        <button type="submit">Login</button>
+      </div>
+      </form>
+ <% } %>  
   </nav>
 </div>
 </header>
