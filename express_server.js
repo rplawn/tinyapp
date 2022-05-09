@@ -3,7 +3,7 @@ const app = express();
 const PORT = 8080; // default port 8080
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
-let users = { 
+const users = { 
   "userRandomID": {
     id: "userRandomID", 
     email: "user@example.com", 
@@ -40,6 +40,16 @@ function generateRandomUser() {
   return result;
 };
 
+
+//function to check if user exists
+
+const oldUser = function (email) {
+  for (const user in users) {
+    if (users[user].email === email) {
+      return true;
+    }
+  } return false;
+};
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -132,8 +142,18 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
+  const emailEntered = req.body.email;  
+  const passwordEntered = req.body.password;
+
+  if (!emailEntered || !passwordEntered) {
+    res.status(400).send("Please enter valid credentials")
+  };
+
+  if (oldUser(emailEntered)) {
+    res.status(400).send("This email address has been used")
+  }
+
   let userID = generateRandomUser();
-  
   users = { 
     id: userID,
     email: req.body.email,
