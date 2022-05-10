@@ -147,8 +147,14 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  delete urlDatabase[req.params.shortURL];
-  res.redirect(`/urls`)
+  const shortURL = req.params.shortURL
+  const user = req.cookies.user_ID
+  if (user === urlDatabase[shortURL].user && user) {
+    delete urlDatabase[req.params.shortURL];
+    return res.redirect(`/urls`)
+  }
+  res.status(404).send("Cannot delete")
+  // console.log(req.cookies)
 });
 
 app.post("/urls/:shortURL", (req, res) => {
