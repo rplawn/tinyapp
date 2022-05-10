@@ -3,6 +3,9 @@ const app = express();
 const PORT = 8080; // default port 8080
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
+const bcrypt = require('bcryptjs');
+
+
 const users = { 
   "userRandomID": {
     id: "userRandomID", 
@@ -85,7 +88,6 @@ const urlDatabaseMapper = function(database) {
 }
 
 urlDatabase = urlDatabaseMapper(urlDatabase);
-console.log("URL Database" , urlDatabase);
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -167,8 +169,10 @@ app.post("/login", (req, res) => {
   console.log(user) 
   if (!user) {
     res.status(403).send("Email cannot be found")
-  } else if (req.body.password !== user.password) {
+    return
+  } else if (!bcrypt.compareSync(req.body.password, user.password)) {
     res.status(403).send("Password doesn't match")
+    return
   } else {
     res.cookie("user_ID", user.id)
     res.redirect(`/urls`)
@@ -203,20 +207,23 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   const emailEntered = req.body.email;  
   const passwordEntered = req.body.password;
-// console.log(emailEntered,passwordEntered)
+ 
+
   if (!emailEntered || !passwordEntered) {
     res.status(400).send("Please enter valid credentials")
+    return
   };
 
   if (oldUser(emailEntered)) {
     res.status(400).send("This email address has been used")
+    return
   }
-
+  const hashedPassword = bcrypt.hashSync(passwordEntered, 10);
   let userID = generateRandomUser();
   users[userID] = { 
     id: userID,
     email: req.body.email,
-    password: req.body.password
+    password: hashedPassword
   };
 
    res.cookie("user_ID", userID)
