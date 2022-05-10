@@ -60,11 +60,32 @@ const findUserByUserName = function (email, database) {
   } return undefined;
 };
 
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+// const urlDatabase = {
+//   "b2xVn2": "http://www.lighthouselabs.ca",
+//   "9sm5xK": "http://www.google.com"
+// };
+
+let urlDatabase = {
+  b6UTxQ: {
+        longURL: "https://www.tsn.ca",
+        userID: "aJ48lW"
+    },
+    i3BoGr: {
+        longURL: "https://www.google.ca",
+        userID: "aJ48lW"
+    }
 };
 
+const urlDatabaseMapper = function(database) {
+  let obj = {};
+  for (let data in database) {
+    obj[data] = database[data]["longURL"]
+  }
+  return obj
+}
+
+urlDatabase = urlDatabaseMapper(urlDatabase);
+console.log("URL Database" , urlDatabase);
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -78,9 +99,9 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
+// app.get("/hello", (req, res) => {
+//   res.send("<html><body>Hello <b>World</b></body></html>\n");
+// });
 
 app.get("/urls/new", (req, res) => {
   if (!req.cookies["user_ID"]) {
