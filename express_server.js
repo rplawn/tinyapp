@@ -5,7 +5,7 @@ const cookieSession = require('cookie-session');
 const bodyParser = require("body-parser");
 const bcrypt = require('bcryptjs');
 
-
+//define variables
 const users = { 
   "userRandomID": {
     id: "userRandomID", 
@@ -19,6 +19,28 @@ const users = {
   }
 }
 
+let urlDatabase = {
+  b6UTxQ: {
+        longURL: "https://www.tsn.ca",
+        userID: "aJ48lW"
+    },
+    i3BoGr: {
+        longURL: "https://www.google.ca",
+        userID: "aJ48lW"
+    }
+};
+
+const urlDatabaseMapper = function(database) {
+  let obj = {};
+  for (let data in database) {
+    obj[data] = database[data]["longURL"]
+  }
+  return obj
+}
+//use function to map over new urlDatabase object to old one in order to prevent multiple code changes
+urlDatabase = urlDatabaseMapper(urlDatabase);
+
+
 app.use(cookieSession({
   name: 'session',
   keys: ["topsecret"],
@@ -27,6 +49,9 @@ app.use(cookieSession({
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
+
+
+//function declarations
 
 function generateRandomString() {
   let result = "";
@@ -48,9 +73,6 @@ function generateRandomUser() {
   return result;
 };
 
-
-//function to check if user exists
-
 const oldUser = function (email) {
   for (const user in users) {
     if (users[user].email === email) {
@@ -62,37 +84,11 @@ const oldUser = function (email) {
 const findUserByUserName = function (email, database) {
   for (const user in database) {
     if (database[user].email === email) {
-      console.log(database[user])
       return database[user];
     }
   } return undefined;
 };
 
-// const urlDatabase = {
-//   "b2xVn2": "http://www.lighthouselabs.ca",
-//   "9sm5xK": "http://www.google.com"
-// };
-
-let urlDatabase = {
-  b6UTxQ: {
-        longURL: "https://www.tsn.ca",
-        userID: "aJ48lW"
-    },
-    i3BoGr: {
-        longURL: "https://www.google.ca",
-        userID: "aJ48lW"
-    }
-};
-
-const urlDatabaseMapper = function(database) {
-  let obj = {};
-  for (let data in database) {
-    obj[data] = database[data]["longURL"]
-  }
-  return obj
-}
-
-urlDatabase = urlDatabaseMapper(urlDatabase);
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -106,9 +102,6 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-// app.get("/hello", (req, res) => {
-//   res.send("<html><body>Hello <b>World</b></body></html>\n");
-// });
 
 app.get("/urls/new", (req, res) => {
   if (!req.session.user_ID) {
@@ -170,7 +163,6 @@ app.post("/urls/:shortURL", (req, res) => {
 
 app.post("/login", (req, res) => {
   const user = findUserByUserName(req.body.email, users)
-  console.log(user) 
   if (!user) {
     res.status(403).send("Email cannot be found")
     return
@@ -179,7 +171,6 @@ app.post("/login", (req, res) => {
     return
   } else {
     req.session.user_ID
-    // res.cookie("user_ID", user.id)
     res.redirect(`/urls`)
   }
 });
@@ -195,7 +186,6 @@ app.get("/login", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  // res.clearCookie("user_ID")
   req.session = null;
   res.redirect(`/urls`)
 });
@@ -213,7 +203,6 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   const emailEntered = req.body.email;  
   const passwordEntered = req.body.password;
- 
 
   if (!emailEntered || !passwordEntered) {
     res.status(400).send("Please enter valid credentials")
