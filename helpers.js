@@ -6,15 +6,26 @@ const findUserByUserName = function (email, database) {
   } return undefined;
 };
 
-const oldUser = function (email) {
-  for (const user in users) {
-    if (users[user].email === email) {
+const oldUser = function (email, database) {
+  for (const user in database) {
+    if (database[user].email === email) {
       return true;
     }
   } return false;
 };
 
+const generateRandomString = function () {
+  let result = "";
+  // declare all characters
+  const characters ='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  for (let i = 0; i < 5; i++) {
+  result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
+};
+
 module.exports = {
   findUserByUserName,
-  oldUser
+  oldUser,
+  generateRandomString
 }

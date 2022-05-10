@@ -5,7 +5,18 @@ const cookieSession = require('cookie-session');
 const bodyParser = require("body-parser");
 const bcrypt = require('bcryptjs');
 
-//define variables
+// const oldUser = require('./helpers')
+// const findUserByUserName = require('./helpers')
+// const generateRandomString = require('./helpers')
+
+const {
+  findUserByUserName,
+  oldUser,
+  generateRandomString
+} = require('./helpers')
+
+
+//define variables keeping the hardcoded values for testing purposes
 const users = { 
   "userRandomID": {
     id: "userRandomID", 
@@ -40,7 +51,6 @@ const urlDatabaseMapper = function(database) {
 //use function to map over new urlDatabase object to old one in order to prevent multiple code changes
 urlDatabase = urlDatabaseMapper(urlDatabase);
 
-
 app.use(cookieSession({
   name: 'session',
   keys: ["topsecret"],
@@ -51,43 +61,13 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
 
 
-//function declarations
-
-function generateRandomString() {
-  let result = "";
-  // declare all characters
-  const characters ='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  for (let i = 0; i < 5; i++) {
-  result += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  return result;
-};
-
-function generateRandomUser() {
-  let result = "";
-  // declare all characters
-  const characters ='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  for (let i = 0; i < 5; i++) {
-  result += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  return result;
-};
-
-const oldUser = require('./helpers')
-const findUserByUserName = require('./helpers')
-
 app.get("/", (req, res) => {
   res.send("Hello!");
-});
-
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
 });
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
-
 
 app.get("/urls/new", (req, res) => {
   if (!req.session.user_ID) {
@@ -155,10 +135,9 @@ app.post("/login", (req, res) => {
   } else if (!bcrypt.compareSync(req.body.password, user.password)) {
     res.status(403).send("Password doesn't match")
     return
-  } else {
-    req.session.user_ID
-    res.redirect(`/urls`)
-  }
+  } 
+    req.session.user_ID = user.id
+    return res.redirect(`/urls`)
 });
 
 app.get("/login", (req, res) => {
@@ -178,6 +157,7 @@ app.post("/logout", (req, res) => {
 
 app.get("/register", (req, res) => {
   if (req.session.user_ID) {
+    console.log("req session", req.session.user_ID)
     res.redirect("/urls")
   }
   let templateVars = {
@@ -195,12 +175,12 @@ app.post("/register", (req, res) => {
     return
   };
 
-  if (oldUser(emailEntered)) {
+  if (oldUser(emailEntered, users)) {
     res.status(400).send("This email address has been used")
     return
   }
   const hashedPassword = bcrypt.hashSync(passwordEntered, 10);
-  let userID = generateRandomUser();
+  let userID = generateRandomString();
   users[userID] = { 
     id: userID,
     email: req.body.email,
@@ -211,3 +191,7 @@ app.post("/register", (req, res) => {
    res.redirect(`/urls`)
 });
 
+//app.listen should be at bottom of code
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
+});
