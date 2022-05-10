@@ -51,12 +51,13 @@ const oldUser = function (email) {
   } return false;
 };
 
-const findUserByUserName = function (email) {
-  for (const user in users) {
-    if (users[user].email === email) {
-      return users[user];
+const findUserByUserName = function (email, database) {
+  for (const user in database) {
+    if (database[user].email === email) {
+      console.log(database[user])
+      return database[user];
     }
-  } return false;
+  } return undefined;
 };
 
 const urlDatabase = {
@@ -82,6 +83,9 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
+  if (!req.cookies["user_ID"]) {
+    res.redirect("/login")
+  }
   const templateVars = { 
     urls: urlDatabase,
     user: users[req.cookies["user_ID"]]
@@ -90,6 +94,9 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
+  if (!req.cookies["user_ID"]) {
+    res.redirect("/login")
+  }
   const templateVars = { 
     urls: urlDatabase,
     user: users[req.cookies["user_ID"]]
@@ -129,18 +136,22 @@ app.post("/urls/:shortURL", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  const user = findUserByUserName(req.body.email) 
+  const user = findUserByUserName(req.body.email, users)
+  console.log(user) 
   if (!user) {
     res.status(403).send("Email cannot be found")
   } else if (req.body.password !== user.password) {
     res.status(403).send("Password doesn't match")
   } else {
-    res.cookie("user_ID", user.userID)
+    res.cookie("user_ID", user.id)
     res.redirect(`/urls`)
   }
 });
 
 app.get("/login", (req, res) => {
+  if (req.cookies["user_ID"]) {
+    res.redirect("/urls")
+  }
   let templateVars = {
     user: req.cookies["user_ID"]
   };
@@ -153,6 +164,9 @@ app.post("/logout", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
+  if (req.cookies["user_ID"]) {
+    res.redirect("/urls")
+  }
   let templateVars = {
     user: req.cookies["user_ID"]
   };
