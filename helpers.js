@@ -1,17 +1,19 @@
-const findUserByUserName = function (email, database) {
-  for (const user in database) {
-    if (database[user].email === email) {
-      return database[user];
+const findUserByUserName = function (userID, database) {
+  const usersURLS = {};
+  for (const URLS in database) {
+    console.log(database[URLS].userID);
+    if (database[URLS].userID === userID) {
+      usersURLS[URLS] = database[URLS].longURL
     }
-  } return undefined;
+  } return usersURLS
 };
 
-const oldUser = function (email, database) {
+const getUserByEmail = function (email, database) {
   for (const user in database) {
     if (database[user].email === email) {
-      return true;
+      return user;
     }
-  } return false;
+  } return undefined;
 };
 
 const generateRandomString = function () {
@@ -26,6 +28,6 @@ const generateRandomString = function () {
 
 module.exports = {
   findUserByUserName,
-  oldUser,
-  generateRandomString
+  generateRandomString,
+  getUserByEmail,
 }
