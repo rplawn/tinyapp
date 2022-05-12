@@ -117,15 +117,14 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  const user = req.session.userID
-  console.log(user);
-  const databaseObject = urlDatabase[req.params.shortURL]
+  const user = req.session.user_ID
+  const databaseObject = urlDatabase[req.params.shortURL].userID
 
   if (!databaseObject) {
     res.status(401).send("<h1>Short URL does not exist</h1>")
     return
   }
-  if (user !== databaseObject.userID) {
+  if (user !== databaseObject) {
     res.status(404).send("Cannot delete")
     return
   }
@@ -140,7 +139,8 @@ app.post("/urls/:shortURL", (req, res) => {
     return
   }
   urlDatabase[req.params.shortURL] = {
-    longURL: req.body.newURL
+    longURL: req.body.newURL,
+    userID: req.session.user_ID
   };
   res.redirect(`/urls`)
 });
