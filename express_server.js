@@ -37,7 +37,7 @@ let urlDatabase = {
     }
 };
 
-
+//set cookies
 app.use(cookieSession({
   name: 'session',
   keys: ["topsecret"],
@@ -47,28 +47,25 @@ app.use(cookieSession({
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
 
+//=========
+//Endpoints
+//=========
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  if(req.session.user_ID) {
+    res.redirect("/urls")
+  }
+  res.redirect("/login")
 });
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-app.get("/urls/new", (req, res) => {
-  if (!req.session.user_ID) {
-    res.redirect("/login")
-    return
-  }
-  const templateVars = { 
-    user: users[req.session.user_ID]
-   };
-  res.render("urls_new", templateVars);
-});
+// === /urls ===
 
 app.get("/urls", (req, res) => {
   if (!req.session.user_ID) {
-    res.redirect("/login")
+    res.status(400).send("You must be logged in to see this page.")
   }
   const urls = findUserByUserName(req.session.user_ID, urlDatabase);
   const templateVars = { 
@@ -76,28 +73,6 @@ app.get("/urls", (req, res) => {
     user: users[req.session.user_ID]
    };
   res.render("urls_index", templateVars);
-});
-
-app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL].longURL;
-  res.redirect(longURL);
-});
-
-app.get("/urls/:shortURL", (req, res) => {
-  const user = req.session.user_ID
-  console.log(user);
-  const databaseObject = urlDatabase[req.params.shortURL]
-
-  if (!databaseObject) {
-    res.status(401).send("<h1>Short URL does not exist</h1>")
-    return
-  }
-  const templateVars = { 
-    shortURL: req.params.shortURL, 
-    longURL: urlDatabase[req.params.shortURL].longURL,
-    user: users[req.session.user_ID]
-  };
-  res.render("urls_show", templateVars);
 });
 
 app.post("/urls", (req, res) => {
@@ -116,6 +91,43 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`);         // Respond with 'Ok' (we will replace this)
 });
 
+// === /urls/new ===
+
+app.get("/urls/new", (req, res) => {
+  if (!req.session.user_ID) {
+    res.redirect("/login")
+    return
+  }
+  const templateVars = { 
+    user: users[req.session.user_ID]
+   };
+  res.render("urls_new", templateVars);
+});
+
+// === /urls/short ===
+
+app.get("/u/:shortURL", (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL].longURL;
+  res.redirect(longURL);
+});
+
+app.get("/urls/:shortURL", (req, res) => {
+  const user = req.session.user_ID
+  const databaseObject = urlDatabase[req.params.shortURL]
+
+  if (!databaseObject) {
+    res.status(401).send("<h1>Short URL does not exist</h1>")
+    return
+  }
+  const templateVars = { 
+    shortURL: req.params.shortURL, 
+    longURL: urlDatabase[req.params.shortURL].longURL,
+    user: users[req.session.user_ID]
+  };
+  res.render("urls_show", templateVars);
+});
+
+
 app.post("/urls/:shortURL/delete", (req, res) => {
   const user = req.session.user_ID
   const databaseObject = urlDatabase[req.params.shortURL].userID
@@ -125,7 +137,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
     return
   }
   if (user !== databaseObject) {
-    res.status(404).send("Cannot delete")
+    res.status(404).send("Cannot delete something you didn't create.")
     return
   }
   delete urlDatabase[req.params.shortURL];
@@ -145,6 +157,18 @@ app.post("/urls/:shortURL", (req, res) => {
   res.redirect(`/urls`)
 });
 
+// === /urls/login ===
+
+app.get("/login", (req, res) => {
+  const loggedInUser = req.session.user_ID
+  if (loggedInUser) {
+    res.redirect(`/urls`)
+  }
+  let templateVars = {
+    user: req.session.user_ID
+  };
+  res.render("urls_login", templateVars)
+});
 
 app.post("/login", (req, res) => {
   const user = getUserByEmail(req.body.email, users)
@@ -163,17 +187,14 @@ app.post("/login", (req, res) => {
   } 
 });
 
-app.get("/login", (req, res) => {
-  let templateVars = {
-    user: req.session.user_ID
-  };
-  res.render("urls_login", templateVars)
-});
+// === /urls/logout ===
 
 app.post("/logout", (req, res) => {
   req.session = null;
   res.redirect(`/urls`)
 });
+
+// === /urls/register ===
 
 app.get("/register", (req, res) => {
   let templateVars = {
@@ -212,6 +233,9 @@ app.post("/register", (req, res) => {
   req.session.user_ID = userID
    res.redirect(`/urls`)
 });
+
+
+// === .listen === 
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
