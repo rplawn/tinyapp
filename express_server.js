@@ -12,30 +12,8 @@ const {
   generateRandomString
 } = require('./helpers');
 
-//define variables keeping the hardcoded values for testing purposes
-const users = { 
-  "userRandomID": {
-    id: "userRandomID", 
-    email: "user@example.com", 
-    password: "purple-monkey-dinosaur"
-  },
- "user2RandomID": {
-    id: "user2RandomID", 
-    email: "user2@example.com", 
-    password: "dishwasher-funk"
-  }
-}
-
-let urlDatabase = {
-  b6UTxQ: {
-        longURL: "https://www.tsn.ca",
-        userID: "aJ48lW"
-    },
-    i3BoGr: {
-        longURL: "https://www.google.ca",
-        userID: "tghjlW"
-    }
-};
+const users = require('./users.db')
+const urlDatabase = require('./database.db')
 
 //set cookies
 app.use(cookieSession({
@@ -114,9 +92,16 @@ app.get("/u/:shortURL", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   const user = req.session.user_ID
   const databaseObject = urlDatabase[req.params.shortURL]
-
+  if (!user) {
+    res.status(401).send("You must be logged in to see this page.")
+    return
+  }
   if (!databaseObject) {
-    res.status(401).send("<h1>Short URL does not exist</h1>")
+    res.status(404).send("<h1>Short URL does not exist</h1>")
+    return
+  }
+  if (user !== databaseObject.userID) {
+    res.status(401).send("You are not authorized.")
     return
   }
   const templateVars = { 
@@ -133,11 +118,11 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   const databaseObject = urlDatabase[req.params.shortURL].userID
 
   if (!databaseObject) {
-    res.status(401).send("<h1>Short URL does not exist</h1>")
+    res.status(404).send("<h1>Short URL does not exist</h1>")
     return
   }
   if (user !== databaseObject) {
-    res.status(404).send("Cannot delete something you didn't create.")
+    res.status(401).send("Cannot delete something you didn't create.")
     return
   }
   delete urlDatabase[req.params.shortURL];
@@ -178,11 +163,11 @@ app.post("/login", (req, res) => {
       req.session.user_ID = loggedInUser.id
       return res.redirect(`/urls`)
     } else {
-      res.status(403).send("Passwords don't match")
+      res.status(401).send("Passwords don't match")
       return
     }
   } else {
-    res.status(403).send("Email not found")
+    res.status(401).send("Email not found")
     return res.redirect(`/urls`)
   } 
 });
@@ -191,7 +176,7 @@ app.post("/login", (req, res) => {
 
 app.post("/logout", (req, res) => {
   req.session = null;
-  res.redirect(`/urls`)
+  res.redirect(`/login`)
 });
 
 // === /urls/register ===
